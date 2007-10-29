@@ -2,7 +2,7 @@
 %define plugin	iaxphone
 %define name	vdr-plugin-%plugin
 %define version	0.0.4
-%define rel	11
+%define rel	12
 
 Summary:	VDR plugin: Place voip phone calls
 Name:		%name
