@@ -14,6 +14,7 @@ URL:		http://ventoso.org/luca/vdr/
 Source:		http://ventoso.org/luca/vdr/vdr-%plugin-%version.tar.bz2
 Patch0:		iaxphone-0.0.4-i18n-1.6.patch
 Patch1:		iaxphone-system-iaxclient.patch
+Patch2:		iaxphone-new-iaxclient.patch
 BuildRoot:	%{_tmppath}/%{name}-buildroot
 BuildRequires:	vdr-devel >= 1.6.0
 BuildRequires:	iaxclient-devel
@@ -32,6 +33,7 @@ plugin), full-duplex sound card.
 rm -rf iaxclient
 %patch0 -p1
 %patch1 -p1
+%patch2 -p1
 %vdr_plugin_prep
 
 %build
