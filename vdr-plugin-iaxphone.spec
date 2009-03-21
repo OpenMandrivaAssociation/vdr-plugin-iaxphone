@@ -13,6 +13,7 @@ License:	GPL
 URL:		http://ventoso.org/luca/vdr/
 Source:		http://ventoso.org/luca/vdr/vdr-%plugin-%version.tar.bz2
 Patch0:		iaxphone-0.0.4-i18n-1.6.patch
+Patch1:		iaxphone-system-iaxclient.patch
 BuildRoot:	%{_tmppath}/%{name}-buildroot
 BuildRequires:	vdr-devel >= 1.6.0
 Requires:	vdr-abi = %vdr_abi
@@ -27,12 +28,12 @@ plugin), full-duplex sound card.
 
 %prep
 %setup -q -n %plugin-%version
-perl -pi -e "s/CFLAGS=/CFLAGS= %optflags -fPIC/" iaxclient/lib/Makefile
+rm -rf iaxclient
 %patch0 -p1
+%patch1 -p1
 %vdr_plugin_prep
 
 %build
-%make -C iaxclient/lib libiaxclient.a
 %vdr_plugin_build
 
 %install
