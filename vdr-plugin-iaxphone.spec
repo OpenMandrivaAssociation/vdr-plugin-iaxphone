@@ -16,6 +16,7 @@ Patch0:		iaxphone-0.0.4-i18n-1.6.patch
 Patch1:		iaxphone-system-iaxclient.patch
 BuildRoot:	%{_tmppath}/%{name}-buildroot
 BuildRequires:	vdr-devel >= 1.6.0
+BuildRequires:	iaxclient-devel
 Requires:	vdr-abi = %vdr_abi
 
 %description
