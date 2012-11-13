@@ -1,0 +1,48 @@
+diff -p -up iaxphone-0.0.4/Makefile.orig iaxphone-0.0.4/Makefile
+--- iaxphone-0.0.4/Makefile.orig	2009-03-21 11:20:43.000000000 +0200
++++ iaxphone-0.0.4/Makefile	2009-03-21 11:20:58.000000000 +0200
+@@ -12,7 +12,8 @@ PLUGIN = iaxphone
+ ### The version number of this plugin (taken from the main source file):
+ 
+ VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).c | awk '{ print $$6 }' | sed -e 's/[";]//g')
+-CODEC_ILBC = $(shell grep '^CODEC_ILBC' iaxclient/lib/Makefile | sed -e 's/^CODEC_ILBC=//')
++#CODEC_ILBC = $(shell grep '^CODEC_ILBC' iaxclient/lib/Makefile | sed -e 's/^CODEC_ILBC=//')
++CODEC_ILBC = 1
+ 
+ ### The C++ compiler and options:
+ 
+@@ -45,7 +46,7 @@ PACKAGE = vdr-$(ARCHIVE)
+ 
+ ### Includes and Defines (add further entries here):
+ 
+-INCLUDES += -I$(VDRDIR)/include -I$(DVBDIR)/include -Iiaxclient/lib
++INCLUDES += -I$(VDRDIR)/include -I$(DVBDIR)/include -I/usr/include/iaxclient
+ 
+ DEFINES += -D_GNU_SOURCE -DPLUGIN_NAME_I18N='"$(PLUGIN)"' 
+ ifeq ($(CODEC_ILBC),1)
+@@ -59,7 +60,7 @@ endif
+ 
+ OBJS = $(PLUGIN).o  statusmenu.o
+ 
+-LIBS = iaxclient/lib/libiaxclient.a
++LIBS = -liaxclient
+ 
+ ### Implicit rules:
+ .PHONY: all all-redirect
+@@ -106,10 +107,7 @@ i18n: $(I18Nmsgs)
+ 
+ all: libvdr-$(PLUGIN).so i18n
+ 
+-iaxclient/lib/libiaxclient.a: 
+-	(cd iaxclient/lib; make libiaxclient.a)
+-
+-libvdr-$(PLUGIN).so: $(OBJS) iaxclient/lib/libiaxclient.a
++libvdr-$(PLUGIN).so: $(OBJS)
+ 	$(CXX) $(CXXFLAGS) -shared $(OBJS) $(LIBS) -o $@
+ 	@cp $@ $(LIBDIR)/$@.$(APIVERSION)
+ 
+@@ -128,4 +126,3 @@ dist:
+ clean:
+ 	@-rm -f $(PODIR)/*.mo $(PODIR)/*.pot
+ 	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~
+-	(cd iaxclient/lib; make clean)

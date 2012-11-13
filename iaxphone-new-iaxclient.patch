@@ -1,0 +1,13 @@
+Index: iaxphone-0.0.4/iaxphone.c
+===================================================================
+--- iaxphone-0.0.4/iaxphone.c
++++ iaxphone-0.0.4/iaxphone.c	2009-03-21 13:34:33.000000000 +0200
+@@ -926,7 +926,7 @@
+ bool cPluginIaxphone::Initialize(void)
+ {
+   // Initialize any background activities the plugin shall perform.
+-  if (iaxc_initialize(AUDIO_INTERNAL_PA,1)) {
++  if (iaxc_initialize(1)) {
+     esyslog("cannot initialize iaxclient!");
+     return false;
+   }

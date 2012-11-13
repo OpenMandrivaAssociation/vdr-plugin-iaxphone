@@ -1,0 +1,1746 @@
+
+This is a semi-automatically created i18n adaptation patch and may contain
+errors (such as missing translations). This should only be used as a
+temporary measure until the upstream plugin maintainer fixes the plugin
+properly according to the instructions in i18n-to-gettext.pl.
+
+Created for Mandriva Linux packaging by Anssi Hannula <anssi@mandriva.org>.
+
+
+Index: iaxphone-0.0.4/Makefile
+===================================================================
+--- iaxphone-0.0.4/Makefile
++++ iaxphone-0.0.4/Makefile	2008-04-24 00:13:56.000000000 +0300
+@@ -57,7 +57,7 @@
+ 
+ ### The object files (add further files here):
+ 
+-OBJS = $(PLUGIN).o i18n.o statusmenu.o
++OBJS = $(PLUGIN).o  statusmenu.o
+ 
+ LIBS = iaxclient/lib/libiaxclient.a
+ 
+@@ -77,9 +77,34 @@
+ 
+ -include $(DEPFILE)
+ 
++### Internationalization (I18N):
++
++PODIR     = po
++LOCALEDIR = $(VDRDIR)/locale
++I18Npo    = $(wildcard $(PODIR)/*.po)
++I18Nmsgs  = $(addprefix $(LOCALEDIR)/, $(addsuffix /LC_MESSAGES/vdr-$(PLUGIN).mo, $(notdir $(foreach file, $(I18Npo), $(basename $(file))))))
++I18Npot   = $(PODIR)/$(PLUGIN).pot
++
++%.mo: %.po
++	msgfmt -c -o $@ $<
++
++$(I18Npot): $(wildcard *.[ch] *.[ch]xx *.cc *.[ch]pp *.hh)
++	xgettext -C -cTRANSLATORS --no-wrap --no-location -k -ktr -ktrNOOP --msgid-bugs-address='<http://qa.mandriva.com/>' -o $@ $^
++
++%.po: $(I18Npot)
++	msgmerge -U --no-wrap --no-location --backup=none -q $@ $<
++	@touch $@
++
++$(I18Nmsgs): $(LOCALEDIR)/%/LC_MESSAGES/vdr-$(PLUGIN).mo: $(PODIR)/%.mo
++	@mkdir -p $(dir $@)
++	cp $< $@
++
++.PHONY: i18n
++i18n: $(I18Nmsgs)
++
+ ### Targets:
+ 
+-all: libvdr-$(PLUGIN).so
++all: libvdr-$(PLUGIN).so i18n
+ 
+ iaxclient/lib/libiaxclient.a: 
+ 	(cd iaxclient/lib; make libiaxclient.a)
+@@ -101,5 +126,6 @@
+ 	@echo Distribution package created as $(PACKAGE).tgz
+ 
+ clean:
++	@-rm -f $(PODIR)/*.mo $(PODIR)/*.pot
+ 	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~
+-	(cd iaxclient/lib; make clean)
+\ Ei rivinvaihtoa tiedoston lopussa
++	(cd iaxclient/lib; make clean)
+Index: iaxphone-0.0.4/i18n.c
+===================================================================
+--- iaxphone-0.0.4/i18n.c
++++ iaxphone-0.0.4/i18n.c	2008-04-24 00:13:56.000000000 +0300
+@@ -1,897 +0,0 @@
+-/*
+- * i18n.c: Internationalization
+- *
+- * See the README file for copyright information and how to reach the author.
+- * Russian: Vyacheslav Dikonov <sdiconov@mail.ru>
+- *
+- * $Id:
+- */
+-
+-#include "i18n.h"
+-
+-
+-const tI18nPhrase Phrases[] = {
+-  { /* English */     "Iax Phone",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Telefono Iax",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Teléfono Iax",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Telèfon Iax",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Place voip phone calls",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Fai telefonate voip",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Haz llamadas telefónicas voip",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Fes trucades telefòniques voip",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Server settings",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Parametri server",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Propriedades servidor",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Propietats servidor",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "iax server",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "server iax",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "servidor iax",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "servidor iax",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "username",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "user",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "usuario",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "usuari",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "password",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "password",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "contraseña",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "contrasenya",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "register",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "registra",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "registra",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "registra",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "register",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "registra",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "registra",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "registra",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "caller id",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "numero chiamata",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "numero llamada",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "numero trucada",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "caller name",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "nome chiamata",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "nombre llamada",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "nom trucada",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Audio settings",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Parametri audio",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Propriedades audio",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Propietats audio",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "input device",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "dispositivo d'ingresso",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "dispositivo de entrada",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "dispositiu d'entrada",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "output device",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "dispositivo di uscita",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "dispositivo de salida",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "dispositiu de sortida",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "ring device",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "dispositivo suoneria",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "dispositivo de timbre",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "dispositiu de timbre",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "preferred codec",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "codec preferito",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "codec preferido",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "codec preferit",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Filters",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Filtri",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Filtros",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Filtres",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "denoise",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "soppressione rumore",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "suprime ruidos",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "suprimeix soroll",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "agc",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "agc",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "agc",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "agc",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "analog agc",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "agc analogico",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "agc analógico",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "agc analògic",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "echo suppression",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "soppressione eco",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "suprime eco",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "suprimeix eco",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "add comfort noise",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "aggiunge rumore comfort",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "añade ruido confort",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "afegeix soroll confort",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Plugin",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Plugin",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Plugin",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Plugin",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "show levels",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "visualizza livelli",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "visualiza niveles",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "visualitza nivells",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "default prefix",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "prefisso per difetto",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "prefijo por defecto",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "prefix per defecte",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Hang-up",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Riappendi",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Cuelga",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Penja",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Call",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Chiama",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Llama",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Truca",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Answer",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Rispondi",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Contesta",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Respon",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Reject",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Rifiuta",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Rechaza",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Rebutja",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Volume",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Volume",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Volumen",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Volum",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Enter number",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Introduci numero",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Introduce numero",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Introdueix numero",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Not registered",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Non registrato",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "No registrado",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "No registrat",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Registered",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Registrato",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Registrado",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Registrat",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Registration failed",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Errore registrazione",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Error registro",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Error registre",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Registration timeout",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Timeout registrazione",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Timeout registro",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Timeout registre",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Unknown registration code",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Codice registrazione sconosciuto",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Codi registre desconegut",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Timeout registre",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Free",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Libero",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Libre",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Lliure",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Incoming call from",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Chiamata da",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Llamada desde",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Trucada des de",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Connected with",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Collegato a",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Conectado con",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Conectat amb",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Calling",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Chiamando",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Llamando",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Trucant",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Microphone",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Microfono",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Micrófono",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Micròfon",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Audio",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Audio",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Audio",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Audio",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { /* English */     "Audio",
+-    /* German */      "",
+-    /* Slovenian */   "",
+-    /* Italian */     "Audio",
+-    /* Dutch */       "",
+-    /* Portuguese */  "",
+-    /* French */      "",
+-    /* Norwegian */   "",
+-    /* Finnish */     "",
+-    /* Polish */      "",
+-    /* Spanish */     "Audio",
+-    /* Greek */       "",
+-    /* Swedish */     "",
+-    /* Romanian */    "",
+-    /* Hungarian */   "",
+-    /* Catalan */     "Audio",
+-    /* Russian */     "",
+-    /* Croatian */    "",
+-    /* Eesti */       "",
+-    /* Dansk */       "",
+-  },
+-  { NULL }
+-};
+Index: iaxphone-0.0.4/i18n.h
+===================================================================
+--- iaxphone-0.0.4/i18n.h
++++ iaxphone-0.0.4/i18n.h	2008-04-24 00:13:56.000000000 +0300
+@@ -1,17 +0,0 @@
+-/*
+-* i18n.h: Internationalization
+-*
+-* See the README file for copyright information and how to reach the author.
+-*
+-* $Id: i18n.h 1.2 2002/05/11 14:48:16 kls Exp $
+-*/
+-      
+-#ifndef _I18N__H
+-#define _I18N__H
+-
+-#include <vdr/i18n.h>
+-#include <vdr/config.h>
+-
+-extern const tI18nPhrase Phrases[];
+-
+-#endif //_I18N__H
+Index: iaxphone-0.0.4/iaxphone.c
+===================================================================
+--- iaxphone-0.0.4/iaxphone.c
++++ iaxphone-0.0.4/iaxphone.c	2008-04-24 00:13:56.000000000 +0300
+@@ -9,13 +9,13 @@
+ #include <vdr/plugin.h>
+ #include <math.h>
+ #include "iaxclient.h"
+-#include "i18n.h"
++
+ #include "statusmenu.h"
+ 
+ 
+ static const char *VERSION        = "0.0.4";
+-static const char *DESCRIPTION    = "Place voip phone calls";
+-static const char *MAINMENUENTRY  = "Iax Phone";
++static const char *DESCRIPTION    = trNOOP("Place voip phone calls");
++static const char *MAINMENUENTRY  = trNOOP("Iax Phone");
+ 
+ //------------------------------------------------------------------------------
+ 
+@@ -942,7 +942,7 @@
+ bool cPluginIaxphone::Start(void)
+ {
+   // Start any background activities the plugin shall perform.
+-  RegisterI18n(Phrases);
++  
+   return true;
+ }
+ 
+Index: iaxphone-0.0.4/po/ca_ES.po
+===================================================================
+--- iaxphone-0.0.4/po/ca_ES.po
++++ iaxphone-0.0.4/po/ca_ES.po	2008-04-24 00:13:56.000000000 +0300
+@@ -0,0 +1,176 @@
++# VDR iaxphone plugin language source file.
++# Copyright (C) YEAR THE VDR-iaxphone'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the VDR-iaxphone package.
++# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: VDR-iaxphone\n"
++"Report-Msgid-Bugs-To: http://qa.mandriva.com/\n"
++"POT-Creation-Date: 2008-04-24 00:13+0300\n"
++"PO-Revision-Date: 2008-04-24 00:13+0300\n"
++"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
++"Language-Team: <vdr@linuxtv.org>\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=ISO-8859-1\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#: iaxphone.c:17
++msgid "Place voip phone calls"
++msgstr "Fes trucades telefòniques voip"
++
++#: iaxphone.c:18
++msgid "Iax Phone"
++msgstr "Telèfon Iax"
++
++#: iaxphone.c:352
++msgid "Server settings"
++msgstr "Propietats servidor"
++
++#: iaxphone.c:353
++msgid "iax server"
++msgstr "servidor iax"
++
++#: iaxphone.c:354
++msgid "username"
++msgstr "usuari"
++
++#: iaxphone.c:355
++msgid "password"
++msgstr "contrasenya"
++
++#: iaxphone.c:356
++msgid "register"
++msgstr "registra"
++
++#: iaxphone.c:357
++msgid "caller id"
++msgstr "numero trucada"
++
++#: iaxphone.c:358
++msgid "caller name"
++msgstr "nom trucada"
++
++#: iaxphone.c:359
++msgid "Audio settings"
++msgstr "Propietats audio"
++
++#: iaxphone.c:360
++msgid "input device"
++msgstr "dispositiu d'entrada"
++
++#: iaxphone.c:361
++msgid "output device"
++msgstr "dispositiu de sortida"
++
++#: iaxphone.c:362
++msgid "ring device"
++msgstr "dispositiu de timbre"
++
++#: iaxphone.c:365
++msgid "preferred codec"
++msgstr "codec preferit"
++
++#: iaxphone.c:366
++msgid "Filters"
++msgstr "Filtres"
++
++#: iaxphone.c:367
++msgid "denoise"
++msgstr "suprimeix soroll"
++
++#: iaxphone.c:368
++msgid "agc"
++msgstr "agc"
++
++#: iaxphone.c:369
++msgid "analog agc"
++msgstr "agc analògic"
++
++#: iaxphone.c:370
++msgid "echo suppression"
++msgstr "suprimeix eco"
++
++#: iaxphone.c:371
++msgid "add comfort noise"
++msgstr "afegeix soroll confort"
++
++#: iaxphone.c:372
++msgid "Plugin"
++msgstr "Plugin"
++
++#: iaxphone.c:373
++msgid "show levels"
++msgstr "visualitza nivells"
++
++#: iaxphone.c:374
++msgid "default prefix"
++msgstr "prefix per defecte"
++
++#: iaxphone.c:506
++msgid "Hang-up"
++msgstr "Penja"
++
++#: iaxphone.c:507
++msgid "Call"
++msgstr "Truca"
++
++#: iaxphone.c:508
++msgid "Answer"
++msgstr "Respon"
++
++#: iaxphone.c:509
++msgid "Reject"
++msgstr "Rebutja"
++
++#: iaxphone.c:515 iaxphone.c:620
++msgid "Enter number"
++msgstr "Introdueix numero"
++
++#: iaxphone.c:550
++msgid "Not registered"
++msgstr "No registrat"
++
++#: iaxphone.c:551
++msgid "Registered"
++msgstr "Registrat"
++
++#: iaxphone.c:552
++msgid "Registration failed"
++msgstr "Error registre"
++
++#: iaxphone.c:553
++msgid "Registration timeout"
++msgstr "Timeout registre"
++
++#: iaxphone.c:554
++msgid "Unknown registration code"
++msgstr "Timeout registre"
++
++#: iaxphone.c:560
++msgid "Free"
++msgstr "Lliure"
++
++#: iaxphone.c:564
++msgid "Connected with"
++msgstr "Conectat amb"
++
++#: iaxphone.c:568
++msgid "Calling"
++msgstr "Trucant"
++
++#: iaxphone.c:572
++msgid "Incoming call from"
++msgstr "Trucada des de"
++
++#: iaxphone.c:595
++msgid "Microphone"
++msgstr "Micròfon"
++
++#: iaxphone.c:597
++msgid "Audio"
++msgstr "Audio"
++
++#: iaxphone.c:612
++msgid "Volume"
++msgstr "Volum"
+Index: iaxphone-0.0.4/po/es_ES.po
+===================================================================
+--- iaxphone-0.0.4/po/es_ES.po
++++ iaxphone-0.0.4/po/es_ES.po	2008-04-24 00:13:56.000000000 +0300
+@@ -0,0 +1,176 @@
++# VDR iaxphone plugin language source file.
++# Copyright (C) YEAR THE VDR-iaxphone'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the VDR-iaxphone package.
++# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: VDR-iaxphone\n"
++"Report-Msgid-Bugs-To: http://qa.mandriva.com/\n"
++"POT-Creation-Date: 2008-04-24 00:13+0300\n"
++"PO-Revision-Date: 2008-04-24 00:13+0300\n"
++"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
++"Language-Team: <vdr@linuxtv.org>\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=ISO-8859-15\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#: iaxphone.c:17
++msgid "Place voip phone calls"
++msgstr "Haz llamadas telefónicas voip"
++
++#: iaxphone.c:18
++msgid "Iax Phone"
++msgstr "Teléfono Iax"
++
++#: iaxphone.c:352
++msgid "Server settings"
++msgstr "Propriedades servidor"
++
++#: iaxphone.c:353
++msgid "iax server"
++msgstr "servidor iax"
++
++#: iaxphone.c:354
++msgid "username"
++msgstr "usuario"
++
++#: iaxphone.c:355
++msgid "password"
++msgstr "contraseña"
++
++#: iaxphone.c:356
++msgid "register"
++msgstr "registra"
++
++#: iaxphone.c:357
++msgid "caller id"
++msgstr "numero llamada"
++
++#: iaxphone.c:358
++msgid "caller name"
++msgstr "nombre llamada"
++
++#: iaxphone.c:359
++msgid "Audio settings"
++msgstr "Propriedades audio"
++
++#: iaxphone.c:360
++msgid "input device"
++msgstr "dispositivo de entrada"
++
++#: iaxphone.c:361
++msgid "output device"
++msgstr "dispositivo de salida"
++
++#: iaxphone.c:362
++msgid "ring device"
++msgstr "dispositivo de timbre"
++
++#: iaxphone.c:365
++msgid "preferred codec"
++msgstr "codec preferido"
++
++#: iaxphone.c:366
++msgid "Filters"
++msgstr "Filtros"
++
++#: iaxphone.c:367
++msgid "denoise"
++msgstr "suprime ruidos"
++
++#: iaxphone.c:368
++msgid "agc"
++msgstr "agc"
++
++#: iaxphone.c:369
++msgid "analog agc"
++msgstr "agc analógico"
++
++#: iaxphone.c:370
++msgid "echo suppression"
++msgstr "suprime eco"
++
++#: iaxphone.c:371
++msgid "add comfort noise"
++msgstr "añade ruido confort"
++
++#: iaxphone.c:372
++msgid "Plugin"
++msgstr "Plugin"
++
++#: iaxphone.c:373
++msgid "show levels"
++msgstr "visualiza niveles"
++
++#: iaxphone.c:374
++msgid "default prefix"
++msgstr "prefijo por defecto"
++
++#: iaxphone.c:506
++msgid "Hang-up"
++msgstr "Cuelga"
++
++#: iaxphone.c:507
++msgid "Call"
++msgstr "Llama"
++
++#: iaxphone.c:508
++msgid "Answer"
++msgstr "Contesta"
++
++#: iaxphone.c:509
++msgid "Reject"
++msgstr "Rechaza"
++
++#: iaxphone.c:515 iaxphone.c:620
++msgid "Enter number"
++msgstr "Introduce numero"
++
++#: iaxphone.c:550
++msgid "Not registered"
++msgstr "No registrado"
++
++#: iaxphone.c:551
++msgid "Registered"
++msgstr "Registrado"
++
++#: iaxphone.c:552
++msgid "Registration failed"
++msgstr "Error registro"
++
++#: iaxphone.c:553
++msgid "Registration timeout"
++msgstr "Timeout registro"
++
++#: iaxphone.c:554
++msgid "Unknown registration code"
++msgstr "Codi registre desconegut"
++
++#: iaxphone.c:560
++msgid "Free"
++msgstr "Libre"
++
++#: iaxphone.c:564
++msgid "Connected with"
++msgstr "Conectado con"
++
++#: iaxphone.c:568
++msgid "Calling"
++msgstr "Llamando"
++
++#: iaxphone.c:572
++msgid "Incoming call from"
++msgstr "Llamada desde"
++
++#: iaxphone.c:595
++msgid "Microphone"
++msgstr "Micrófono"
++
++#: iaxphone.c:597
++msgid "Audio"
++msgstr "Audio"
++
++#: iaxphone.c:612
++msgid "Volume"
++msgstr "Volumen"
+Index: iaxphone-0.0.4/po/iaxphone.pot
+===================================================================
+--- iaxphone-0.0.4/po/iaxphone.pot
++++ iaxphone-0.0.4/po/iaxphone.pot	2008-04-24 00:13:56.000000000 +0300
+@@ -0,0 +1,177 @@
++# SOME DESCRIPTIVE TITLE.
++# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the PACKAGE package.
++# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
++#
++#, fuzzy
++msgid ""
++msgstr ""
++"Project-Id-Version: PACKAGE VERSION\n"
++"Report-Msgid-Bugs-To: http://qa.mandriva.com/\n"
++"POT-Creation-Date: 2008-04-24 00:13+0300\n"
++"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
++"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
++"Language-Team: LANGUAGE <LL@li.org>\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=CHARSET\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#: iaxphone.c:17
++msgid "Place voip phone calls"
++msgstr ""
++
++#: iaxphone.c:18
++msgid "Iax Phone"
++msgstr ""
++
++#: iaxphone.c:352
++msgid "Server settings"
++msgstr ""
++
++#: iaxphone.c:353
++msgid "iax server"
++msgstr ""
++
++#: iaxphone.c:354
++msgid "username"
++msgstr ""
++
++#: iaxphone.c:355
++msgid "password"
++msgstr ""
++
++#: iaxphone.c:356
++msgid "register"
++msgstr ""
++
++#: iaxphone.c:357
++msgid "caller id"
++msgstr ""
++
++#: iaxphone.c:358
++msgid "caller name"
++msgstr ""
++
++#: iaxphone.c:359
++msgid "Audio settings"
++msgstr ""
++
++#: iaxphone.c:360
++msgid "input device"
++msgstr ""
++
++#: iaxphone.c:361
++msgid "output device"
++msgstr ""
++
++#: iaxphone.c:362
++msgid "ring device"
++msgstr ""
++
++#: iaxphone.c:365
++msgid "preferred codec"
++msgstr ""
++
++#: iaxphone.c:366
++msgid "Filters"
++msgstr ""
++
++#: iaxphone.c:367
++msgid "denoise"
++msgstr ""
++
++#: iaxphone.c:368
++msgid "agc"
++msgstr ""
++
++#: iaxphone.c:369
++msgid "analog agc"
++msgstr ""
++
++#: iaxphone.c:370
++msgid "echo suppression"
++msgstr ""
++
++#: iaxphone.c:371
++msgid "add comfort noise"
++msgstr ""
++
++#: iaxphone.c:372
++msgid "Plugin"
++msgstr ""
++
++#: iaxphone.c:373
++msgid "show levels"
++msgstr ""
++
++#: iaxphone.c:374
++msgid "default prefix"
++msgstr ""
++
++#: iaxphone.c:506
++msgid "Hang-up"
++msgstr ""
++
++#: iaxphone.c:507
++msgid "Call"
++msgstr ""
++
++#: iaxphone.c:508
++msgid "Answer"
++msgstr ""
++
++#: iaxphone.c:509
++msgid "Reject"
++msgstr ""
++
++#: iaxphone.c:515 iaxphone.c:620
++msgid "Enter number"
++msgstr ""
++
++#: iaxphone.c:550
++msgid "Not registered"
++msgstr ""
++
++#: iaxphone.c:551
++msgid "Registered"
++msgstr ""
++
++#: iaxphone.c:552
++msgid "Registration failed"
++msgstr ""
++
++#: iaxphone.c:553
++msgid "Registration timeout"
++msgstr ""
++
++#: iaxphone.c:554
++msgid "Unknown registration code"
++msgstr ""
++
++#: iaxphone.c:560
++msgid "Free"
++msgstr ""
++
++#: iaxphone.c:564
++msgid "Connected with"
++msgstr ""
++
++#: iaxphone.c:568
++msgid "Calling"
++msgstr ""
++
++#: iaxphone.c:572
++msgid "Incoming call from"
++msgstr ""
++
++#: iaxphone.c:595
++msgid "Microphone"
++msgstr ""
++
++#: iaxphone.c:597
++msgid "Audio"
++msgstr ""
++
++#: iaxphone.c:612
++msgid "Volume"
++msgstr ""
+Index: iaxphone-0.0.4/po/it_IT.po
+===================================================================
+--- iaxphone-0.0.4/po/it_IT.po
++++ iaxphone-0.0.4/po/it_IT.po	2008-04-24 00:13:56.000000000 +0300
+@@ -0,0 +1,176 @@
++# VDR iaxphone plugin language source file.
++# Copyright (C) YEAR THE VDR-iaxphone'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the VDR-iaxphone package.
++# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: VDR-iaxphone\n"
++"Report-Msgid-Bugs-To: http://qa.mandriva.com/\n"
++"POT-Creation-Date: 2008-04-24 00:13+0300\n"
++"PO-Revision-Date: 2008-04-24 00:13+0300\n"
++"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
++"Language-Team: <vdr@linuxtv.org>\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=ISO-8859-15\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#: iaxphone.c:17
++msgid "Place voip phone calls"
++msgstr "Fai telefonate voip"
++
++#: iaxphone.c:18
++msgid "Iax Phone"
++msgstr "Telefono Iax"
++
++#: iaxphone.c:352
++msgid "Server settings"
++msgstr "Parametri server"
++
++#: iaxphone.c:353
++msgid "iax server"
++msgstr "server iax"
++
++#: iaxphone.c:354
++msgid "username"
++msgstr "user"
++
++#: iaxphone.c:355
++msgid "password"
++msgstr "password"
++
++#: iaxphone.c:356
++msgid "register"
++msgstr "registra"
++
++#: iaxphone.c:357
++msgid "caller id"
++msgstr "numero chiamata"
++
++#: iaxphone.c:358
++msgid "caller name"
++msgstr "nome chiamata"
++
++#: iaxphone.c:359
++msgid "Audio settings"
++msgstr "Parametri audio"
++
++#: iaxphone.c:360
++msgid "input device"
++msgstr "dispositivo d'ingresso"
++
++#: iaxphone.c:361
++msgid "output device"
++msgstr "dispositivo di uscita"
++
++#: iaxphone.c:362
++msgid "ring device"
++msgstr "dispositivo suoneria"
++
++#: iaxphone.c:365
++msgid "preferred codec"
++msgstr "codec preferito"
++
++#: iaxphone.c:366
++msgid "Filters"
++msgstr "Filtri"
++
++#: iaxphone.c:367
++msgid "denoise"
++msgstr "soppressione rumore"
++
++#: iaxphone.c:368
++msgid "agc"
++msgstr "agc"
++
++#: iaxphone.c:369
++msgid "analog agc"
++msgstr "agc analogico"
++
++#: iaxphone.c:370
++msgid "echo suppression"
++msgstr "soppressione eco"
++
++#: iaxphone.c:371
++msgid "add comfort noise"
++msgstr "aggiunge rumore comfort"
++
++#: iaxphone.c:372
++msgid "Plugin"
++msgstr "Plugin"
++
++#: iaxphone.c:373
++msgid "show levels"
++msgstr "visualizza livelli"
++
++#: iaxphone.c:374
++msgid "default prefix"
++msgstr "prefisso per difetto"
++
++#: iaxphone.c:506
++msgid "Hang-up"
++msgstr "Riappendi"
++
++#: iaxphone.c:507
++msgid "Call"
++msgstr "Chiama"
++
++#: iaxphone.c:508
++msgid "Answer"
++msgstr "Rispondi"
++
++#: iaxphone.c:509
++msgid "Reject"
++msgstr "Rifiuta"
++
++#: iaxphone.c:515 iaxphone.c:620
++msgid "Enter number"
++msgstr "Introduci numero"
++
++#: iaxphone.c:550
++msgid "Not registered"
++msgstr "Non registrato"
++
++#: iaxphone.c:551
++msgid "Registered"
++msgstr "Registrato"
++
++#: iaxphone.c:552
++msgid "Registration failed"
++msgstr "Errore registrazione"
++
++#: iaxphone.c:553
++msgid "Registration timeout"
++msgstr "Timeout registrazione"
++
++#: iaxphone.c:554
++msgid "Unknown registration code"
++msgstr "Codice registrazione sconosciuto"
++
++#: iaxphone.c:560
++msgid "Free"
++msgstr "Libero"
++
++#: iaxphone.c:564
++msgid "Connected with"
++msgstr "Collegato a"
++
++#: iaxphone.c:568
++msgid "Calling"
++msgstr "Chiamando"
++
++#: iaxphone.c:572
++msgid "Incoming call from"
++msgstr "Chiamata da"
++
++#: iaxphone.c:595
++msgid "Microphone"
++msgstr "Microfono"
++
++#: iaxphone.c:597
++msgid "Audio"
++msgstr "Audio"
++
++#: iaxphone.c:612
++msgid "Volume"
++msgstr "Volume"
