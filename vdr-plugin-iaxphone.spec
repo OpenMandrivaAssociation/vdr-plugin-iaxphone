@@ -1,13 +1,9 @@
-
 %define plugin	iaxphone
-%define name	vdr-plugin-%plugin
-%define version	0.0.4
-%define rel	17
 
 Summary:	VDR plugin: Place voip phone calls
-Name:		%name
-Version:	%version
-Release:	%mkrel %rel
+Name:		vdr-plugin-%plugin
+Version:	0.0.4
+Release:	18
 Group:		Video
 License:	GPL
 URL:		http://ventoso.org/luca/vdr/
@@ -15,7 +11,6 @@ Source:		http://ventoso.org/luca/vdr/vdr-%plugin-%version.tar.bz2
 Patch0:		iaxphone-0.0.4-i18n-1.6.patch
 Patch1:		iaxphone-system-iaxclient.patch
 Patch2:		iaxphone-new-iaxclient.patch
-BuildRoot:	%{_tmppath}/%{name}-buildroot
 BuildRequires:	vdr-devel >= 1.6.0
 BuildRequires:	iaxclient-devel
 Requires:	vdr-abi = %vdr_abi
@@ -40,17 +35,7 @@ rm -rf iaxclient
 %vdr_plugin_build
 
 %install
-rm -rf %{buildroot}
 %vdr_plugin_install
-
-%clean
-rm -rf %{buildroot}
-
-%post
-%vdr_plugin_post %plugin
-
-%postun
-%vdr_plugin_postun %plugin
 
 %files -f %plugin.vdr
 %defattr(-,root,root)
