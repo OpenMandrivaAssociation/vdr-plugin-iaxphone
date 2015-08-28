@@ -3,7 +3,7 @@
 Summary:	VDR plugin: Place voip phone calls
 Name:		vdr-plugin-%plugin
 Version:	0.0.4
-Release:	21
+Release:	22
 Group:		Video
 License:	GPL
 URL:		http://ventoso.org/luca/vdr/
