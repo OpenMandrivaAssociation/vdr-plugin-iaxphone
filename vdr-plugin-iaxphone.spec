@@ -6,7 +6,7 @@ Version:	0.0.4
 Release:	22
 Group:		Video
 License:	GPL
-URL:		http://ventoso.org/luca/vdr/
+URL:		https://ventoso.org/luca/vdr/
 Source:		http://ventoso.org/luca/vdr/vdr-%plugin-%{version}.tgz
 Patch0:		iaxphone-0.0.4-i18n-1.6.patch
 Patch1:		iaxphone-system-iaxclient.patch
